@@ -42,6 +42,4 @@ jobs:
         args: --issues-exit-code=0
 
     - name: Run tests
-      run: |
-        make build
-        make cover
+      run: make cover

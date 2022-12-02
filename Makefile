@@ -4,9 +4,6 @@ lint:
 release:
 	goreleaser build --snapshot --single-target --rm-dist
 
-build:
-	go build
-
 test:
 	go test -race ./...
 
