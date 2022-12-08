@@ -25,7 +25,7 @@ func TestSerializeToHCL(t *testing.T) {
 			output: `variables = data.sops_external.variables.data["foo-bar"]` + "\n",
 		},
 		{
-			input: map[any]any{
+			input: map[int]any{
 				63000012: "foobar",
 			},
 			output: "variables = {\n  \"63000012\" = \"foobar\"\n}\n",

@@ -1,13 +1,13 @@
 package helpers
 
 import (
-	"fmt"
-	"reflect"
+	"encoding/json"
 	"regexp"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
+	ctyjson "github.com/zclconf/go-cty/cty/json"
 )
 
 var regexVars = regexp.MustCompilePOSIX(`"\$\$\{([^\}]+)\}"`)
@@ -36,37 +36,14 @@ func fixVariableReference(data string) string {
 }
 
 func transformToCTY(source any) cty.Value {
-	switch v := source.(type) {
-	case string:
-		return cty.StringVal(v)
-	case int:
-		return cty.NumberIntVal(int64(v))
-	case float32:
-		return cty.NumberFloatVal(float64(v))
-	case float64:
-		return cty.NumberFloatVal(v)
-	case bool:
-		return cty.BoolVal(v)
+	jsonBytes, err := json.Marshal(source)
+	if err != nil {
+		panic(err)
+	}
+	var ctyJsonVal ctyjson.SimpleJSONValue
+	if err := ctyJsonVal.UnmarshalJSON(jsonBytes); err != nil {
+		panic(err)
 	}
 
-	val := reflect.ValueOf(source)
-	if val.Kind() == reflect.Map {
-		result := map[string]cty.Value{}
-		for _, e := range val.MapKeys() {
-			v := val.MapIndex(e)
-			k := fmt.Sprintf("%v", e.Interface())
-			result[k] = transformToCTY(v.Interface())
-		}
-		return cty.ObjectVal(result)
-	}
-
-	if val.Kind() == reflect.Slice {
-		result := []cty.Value{}
-		for i := 0; i < val.Len(); i++ {
-			result = append(result, transformToCTY(val.Index(i).Interface()))
-		}
-		return cty.ListVal(result)
-	}
-
-	return cty.NilVal
+	return ctyJsonVal.Value
 }
