@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -15,7 +14,6 @@ func init() {
 }
 
 func registerFilters() {
-	MustRegisterFilter("render_commercetools_scopes", filterCommercetoolsScopes)
 	MustRegisterFilter("tf", FilterTFValue)
 	MustRegisterFilter("string", filterString)
 	MustRegisterFilter("slugify", filterSlugify)
@@ -26,24 +24,6 @@ func MustRegisterFilter(name string, filterFunc pongo2.FilterFunction) {
 	if err := pongo2.RegisterFilter(name, filterFunc); err != nil {
 		panic(fmt.Errorf("pongo2.RegisterFilter(%q): %v", name, err))
 	}
-}
-
-func filterCommercetoolsScopes(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
-	if !in.CanSlice() {
-		return nil, &pongo2.Error{
-			Sender:    "filter:render_commercetools_scopes",
-			OrigError: errors.New("input is not sliceable"),
-		}
-	}
-
-	projectKey := param.String()
-	sl := make([]string, in.Len())
-	for i := 0; i < in.Len(); i++ {
-		sl = append(sl, fmt.Sprintf(`"%s:%s",`, in.Index(i).String(), projectKey))
-	}
-
-	result := pongo2.AsSafeValue(fmt.Sprintf("[\n  %s\n]", strings.Join(sl, "")))
-	return result, nil
 }
 
 func FilterTFValue(in *pongo2.Value, param *pongo2.Value) (*pongo2.Value, *pongo2.Error) {
