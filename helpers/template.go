@@ -6,7 +6,14 @@ import (
 )
 
 func RenderGoTemplate(t string, data any) (string, error) {
-	tpl, err := template.New("template").Parse(t)
+	tpl, err := template.
+		New("template").
+		Funcs(map[string]any{
+			"renderProperty": func(key string, value any) string {
+				return SerializeToHCL(key, value)
+			},
+		}).
+		Parse(t)
 	if err != nil {
 		return "", err
 	}
