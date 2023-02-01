@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"sort"
@@ -62,9 +63,10 @@ func sortAnyMap(m any) any {
 	sort.Slice(keys, func(i, j int) bool {
 		return keys[i].String() < keys[j].String()
 	})
-	sortedMap := make(map[any]any)
+	sortedMap := make(map[string]any)
 	for _, k := range keys {
-		sortedMap[k.Interface()] = val.MapIndex(k).Interface()
+		key := fmt.Sprintf("%v", k.Interface())
+		sortedMap[key] = val.MapIndex(k).Interface()
 	}
 	return sortedMap
 }
