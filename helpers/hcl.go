@@ -2,7 +2,9 @@ package helpers
 
 import (
 	"encoding/json"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -15,6 +17,12 @@ var regexVars = regexp.MustCompilePOSIX(`"\$\$\{([^\}]+)\}"`)
 func SerializeToHCL(attributeName string, data any) string {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
+
+	v := reflect.ValueOf(data)
+	if v.Kind() == reflect.Map {
+		data = sortAnyMap(data)
+	}
+
 	rootBody.SetAttributeValue(attributeName, transformToCTY(data))
 	return fixVariableReference(string(f.Bytes()))
 }
@@ -46,4 +54,17 @@ func transformToCTY(source any) cty.Value {
 	}
 
 	return ctyJsonVal.Value
+}
+
+func sortAnyMap(m any) any {
+	val := reflect.ValueOf(m)
+	keys := reflect.ValueOf(m).MapKeys()
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].String() < keys[j].String()
+	})
+	sortedMap := make(map[any]any)
+	for _, k := range keys {
+		sortedMap[k.Interface()] = val.MapIndex(k).Interface()
+	}
+	return sortedMap
 }
